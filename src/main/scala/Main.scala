@@ -32,6 +32,9 @@ object DriveQuickStart {
 
     private final def TOKENS_DIRECTORY_PATH: String = "tokens"
 
+    /**
+      * If modifying these scopes, delete your previously saved tokens/ folder.
+      */ 
     private final def SCOPES: Seq[String] = List(DriveScopes.DRIVE_METADATA_READONLY)
 
     private final def CREDENTIALS_FILE_PATH: String = "client_secret.json"
