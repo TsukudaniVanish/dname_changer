@@ -26,7 +26,7 @@ object ServiceProvider {
             repository.Repository(),
             driveHandler,
        )
-       dnameHandler.GetAllFiles()
+       dnameHandler.ListSegments()
     }
 }
 

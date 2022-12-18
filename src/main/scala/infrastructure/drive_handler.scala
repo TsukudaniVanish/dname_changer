@@ -20,6 +20,9 @@ import java.io.InputStreamReader
 
 import scala.jdk.CollectionConverters._
 import java.nio.charset.StandardCharsets
+import javax.management.Query
+import scala.compiletime.ops.boolean
+
 
 class DriveHandler(
     applicationName: String, 
@@ -32,6 +35,7 @@ class DriveHandler(
     private final def httpTransport = GoogleNetHttpTransport.newTrustedTransport();
     private final def service = Drive.Builder(httpTransport, jsonFactory, getCredentials(httpTransport)).setApplicationName(applicationName).build();
 
+    private val folderMimeType: String = "application/vnd.google-apps.folder"
 
     /**
      * Creates an authorized Credential object.
@@ -63,8 +67,15 @@ class DriveHandler(
         service.files().list().getPageSize()
     }
 
-    def FindFiles(pageSize: Int, nextPageToken: String): (Seq[File], Option[String]) = {
+    def FindFiles(
+        pageSize: Int, 
+        nextPageToken: String,
+        isFileOnly: Boolean,
+        isFolderOnly: Boolean,
+    ): (Seq[File], Option[String]) = {
+        val query: String = setQueryBuilderIsFolderOnly( setQueryBuilderIsFileOnly(QueryBuilder(List()), isFileOnly) ,isFolderOnly).Build()
         val result = service.files().list()
+            .setQ(query)
             .setPageToken(nextPageToken)
             .setPageSize(pageSize)
             .setFields("nextPageToken, files(id, name)")
@@ -73,6 +84,27 @@ class DriveHandler(
             case "" => None
             case s => Some(s)
         (result.getFiles().asScala.toList.map(f => File(f)), pageToken)
+    }
+
+    private def setQueryBuilderIsFileOnly(
+        builder: QueryBuilder,
+        isFileOnly: Boolean,
+    ): QueryBuilder = if isFileOnly then builder.MimeTypeNot(folderMimeType) else builder
+
+    private def setQueryBuilderIsFolderOnly(
+        builder: QueryBuilder,
+        isFolderOnly: Boolean,
+    ): QueryBuilder = if isFolderOnly then builder.MimeType(folderMimeType) else builder 
+
+    private class QueryBuilder(queries: Seq[String] = List()) {
+
+        def MimeType(mime: String): QueryBuilder = QueryBuilder( queries :+ s"mimeType ='${mime}'")
+
+        def MimeTypeNot(mime: String): QueryBuilder = QueryBuilder(queries :+ s"mimeType != '${mime}'")
+
+        def ParentsIn(id:String): QueryBuilder = QueryBuilder(queries :+ s"${id} in parents")
+
+        def Build(): String = queries.fold("")((s, t) => if s.isBlank then  t else s + " and " + t) + " and trashed = false"
     }
 
 

@@ -1,5 +1,10 @@
 package usecase
 
+
+/**
+ * Google Drive Api Handler 
+ *  @throws IOException If the credentials.json file cannot be found.
+ */
 trait DriveHandler {
     def GetMaxPageSize(): Int 
     /**
@@ -9,5 +14,10 @@ trait DriveHandler {
       * @param nextPageToken
       * @return files, nextPageToken
       */
-    def FindFiles(pageSize: Int, nextPageToken:String): (Seq[File], Option[String])
+    def FindFiles(
+      pageSize: Int, 
+      nextPageToken:String,
+      isFileOnly: Boolean,
+      isFolderOnly: Boolean,
+    ): (Seq[File], Option[String])
 }

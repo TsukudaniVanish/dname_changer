@@ -4,9 +4,13 @@ trait Repository {
     /**
       * 
       *
-      * @param driveHandler
-      * @param pageMax
       * @return files, nextPageToken
       */
-    def FindFiles(driveHandler: DriveHandler, pageMax: Int): (Seq[File], Option[String])
+    def FindSegments(
+        driveHandler: DriveHandler, 
+        pageMax: Int, 
+        pageSize:Int,
+        isFileOnly: Boolean,
+        isDirOnly: Boolean,
+    ): (Seq[File], Option[String])
 }
