@@ -20,15 +20,17 @@ object ServiceProvider {
     private final def CREDENTIALS_FILE_PATH: String = "client_secret.json"
 
     def runApp():Unit = {
+       val parser = infrastructure.Parser("dname")
        val driveHandler = infrastructure.DriveHandler(APPLICATION_NAME, TOKENS_DIRECTORY_PATH, SCOPES, CREDENTIALS_FILE_PATH, JSON_FACTORY)
        val dnameHandler = usecase.DnameHandler(
             presenter.Presenter(),
             repository.Repository(),
+            parser,
             driveHandler,
        )
-       dnameHandler.ListSegments()
+       dnameHandler.Exec()
     }
 }
 
-@main def run: Unit = 
+@main def run(): Unit = 
     ServiceProvider.runApp()
