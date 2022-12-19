@@ -12,5 +12,6 @@ trait Repository {
         pageSize:Int,
         isFileOnly: Boolean,
         isDirOnly: Boolean,
-    ): (Seq[File], Option[String])
+        name:String,
+    ): (Seq[File], String)
 }

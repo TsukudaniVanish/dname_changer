@@ -17,32 +17,39 @@ class Parser(
             programName(applicationName),
             head(applicationName, ""),
             cmd("ls")
-                .action((_, c) => ListSegments(18, 10, false, false))
+                .action((_, c) => ListSegments(18, 10, false, false, ""))
                 .text("list up contents in your drive")
                 .children(
                     opt[Unit]("folder-only")
                         .abbr("d")
                         .action((_, c) => c match
-                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly) => ListSegments(pageMax, pageNum, isFileOnly, true)
+                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, pageNum, isFileOnly, true, name)
                             case _ => c
                         )
                         .text("show folders"),
                     opt[Int]("page-size")
                         .abbr("s")
                         .action((x, c) => c match
-                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly) => ListSegments(x, pageNum, isFileOnly, isDirOnly)
+                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(x, pageNum, isFileOnly, isDirOnly, name)
                             case _ => c
                         )
                         .text("page size"),
                     opt[Int]("page-num")
                         .abbr("n")
                         .action((f, c) => c match
-                            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly) => ListSegments(pageMax, f, isFileOnly, isDirOnly)
+                            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, f, isFileOnly, isDirOnly, name)
                             case _ => c
                         )
                         .text("max page number to read"),
+                    opt[String]("name")
+                        .abbr("w")
+                        .action((s, c) => c match
+                            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, s)
+                            case _ => c 
+                        )
+                        .text("keywords contained in name"),
                     checkConfig(c => c match
-                        case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly) => if isFileOnly && isDirOnly then failure(" can't mix file ony and folder only") else success
+                        case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => if isFileOnly && isDirOnly then failure(" can't mix file ony and folder only") else success
                         case _ => success
                     )
 

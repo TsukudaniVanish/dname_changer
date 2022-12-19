@@ -19,5 +19,6 @@ trait DriveHandler {
       nextPageToken:String,
       isFileOnly: Boolean,
       isFolderOnly: Boolean,
-    ): (Seq[File], Option[String])
+      name: String
+    ): (Seq[File], String)
 }

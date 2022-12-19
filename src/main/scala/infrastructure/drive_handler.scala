@@ -47,8 +47,7 @@ class DriveHandler(
     private def getCredentials(httpTransport: NetHttpTransport): Credential = {
        val in: InputStream = getClass.getResourceAsStream(credentialPath) match
             case null => throw FileNotFoundException("Resource not found:" ++ credentialPath)
-            case input => input
-        
+            case input => input;
 
         val googleClientSecrets = GoogleClientSecrets.load(jsonFactory, InputStreamReader(in, StandardCharsets.UTF_8));
 
@@ -58,7 +57,7 @@ class DriveHandler(
         .setAccessType("offline")
         .build();
 
-        val recover = LocalServerReceiver.Builder().setPort(8888).build()
+        val recover = LocalServerReceiver.Builder().setPort(8888).build();
 
         AuthorizationCodeInstalledApp(flow, recover).authorize("user")
     }
@@ -72,17 +71,27 @@ class DriveHandler(
         nextPageToken: String,
         isFileOnly: Boolean,
         isFolderOnly: Boolean,
-    ): (Seq[File], Option[String]) = {
-        val query: String = setQueryBuilderIsFolderOnly( setQueryBuilderIsFileOnly(QueryBuilder(List()), isFileOnly) ,isFolderOnly).Build()
+        name: String,
+    ): (Seq[File], String) = {
+        val query: String = setQueryBuilderIsFolderOnly(
+            setQueryBuilderIsFileOnly(
+                setQueryBuilderName(
+                    QueryBuilder(List()),
+                    name,
+                ), 
+                isFileOnly,
+            ),
+            isFolderOnly,
+        ).Build();
         val result = service.files().list()
             .setQ(query)
             .setPageToken(nextPageToken)
             .setPageSize(pageSize)
             .setFields("nextPageToken, files(id, name)")
-            .execute()
-        val pageToken = result.getNextPageToken() match 
-            case "" => None
-            case s => Some(s)
+            .execute();
+        val pageToken = result.getNextPageToken() match
+            case null => ""
+            case s => s 
         (result.getFiles().asScala.toList.map(f => File(f)), pageToken)
     }
 
@@ -96,16 +105,26 @@ class DriveHandler(
         isFolderOnly: Boolean,
     ): QueryBuilder = if isFolderOnly then builder.MimeType(folderMimeType) else builder 
 
+    private def setQueryBuilderName(
+        builder: QueryBuilder,
+        name: String
+    ): QueryBuilder = if name.isBlank() then builder else builder.NameContains(name)
+
+    private def setQueryBuilderID(
+        builder: QueryBuilder,
+        id: String
+    ): QueryBuilder = if id.isBlank() then builder else builder.ParentsIn(id)
+
     private class QueryBuilder(queries: Seq[String] = List()) {
 
         def MimeType(mime: String): QueryBuilder = QueryBuilder( queries :+ s"mimeType ='${mime}'")
 
         def MimeTypeNot(mime: String): QueryBuilder = QueryBuilder(queries :+ s"mimeType != '${mime}'")
 
-        def ParentsIn(id:String): QueryBuilder = QueryBuilder(queries :+ s"${id} in parents")
+        def NameContains(name: String): QueryBuilder = QueryBuilder(queries :+ s"name contains '${name}'")
+
+        def ParentsIn(id:String): QueryBuilder = QueryBuilder(queries :+ s"'${id}' in parents")
 
         def Build(): String = queries.fold("")((s, t) => if s.isBlank then  t else s + " and " + t) + " and trashed = false"
     }
-
-
 } 
