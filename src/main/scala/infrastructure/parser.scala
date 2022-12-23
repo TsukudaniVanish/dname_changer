@@ -17,39 +17,46 @@ class Parser(
             programName(applicationName),
             head(applicationName, ""),
             cmd("ls")
-                .action((_, c) => ListSegments(18, 10, false, false, ""))
+                .action((_, c) => ListSegments(domain.LSInput()))
                 .text("list up contents in your drive")
                 .children(
                     opt[Unit]("folder-only")
                         .abbr("d")
                         .action((_, c) => c match
-                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, pageNum, isFileOnly, true, name)
+                            case ListSegments(input) => ListSegments(domain.LSInput(input.PageNum, input.PageSize, input.IsFileOnly, true, input.Name, input.OptParentId))
                             case _ => c
                         )
                         .text("show folders"),
                     opt[Int]("page-size")
                         .abbr("s")
                         .action((x, c) => c match
-                            case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(x, pageNum, isFileOnly, isDirOnly, name)
+                            case ListSegments(input) => ListSegments(domain.LSInput(input.PageNum, x, input.IsFileOnly, input.IsDirOnly, input.Name, input.OptParentId))
                             case _ => c
                         )
                         .text("page size"),
                     opt[Int]("page-num")
                         .abbr("n")
                         .action((f, c) => c match
-                            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, f, isFileOnly, isDirOnly, name)
+                            case Command.ListSegments(input) => ListSegments(domain.LSInput(f, input.PageSize, input.IsFileOnly, input.IsDirOnly, input.Name, input.OptParentId))
                             case _ => c
                         )
                         .text("max page number to read"),
                     opt[String]("name")
                         .abbr("w")
                         .action((s, c) => c match
-                            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, s)
+                            case Command.ListSegments(input) => ListSegments(domain.LSInput(input.PageNum, input.PageSize, input.IsFileOnly, input.IsDirOnly, s, input.OptParentId))
                             case _ => c 
                         )
                         .text("keywords contained in name"),
+                    opt[String]("parent-id")
+                        .abbr("p")
+                        .action((s, c) => c match
+                            case Command.ListSegments(input) => ListSegments(domain.LSInput(input.PageNum, input.PageSize, input.IsFileOnly, input.IsDirOnly, input.Name, Some(s)))
+                            case _ => c
+                        )
+                        .text("set parent id and constrain parent of segments"),
                     checkConfig(c => c match
-                        case ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => if isFileOnly && isDirOnly then failure(" can't mix file ony and folder only") else success
+                        case ListSegments(input) => if input.IsFileOnly && input.IsDirOnly then failure(" can't mix file ony and folder only") else success
                         case _ => success
                     )
 
@@ -64,14 +71,5 @@ class Parser(
         OParser.parse(parser1, args, Command.Quit()) match
         case Some(c) => c   
         case None => Command.Error()
-    }
-
-    private enum CommandNames {
-        case None 
-        case ListSegments 
-    }
-    private class commandBuilder(name: CommandNames = CommandNames.None, options: Seq[String] = List()) {
-        private val cmdName = name
-        def updateOpts(opt: String): commandBuilder = commandBuilder(cmdName, options :+ opt)
     }
 }

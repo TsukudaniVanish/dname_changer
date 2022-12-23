@@ -10,11 +10,12 @@ class DnameHandler(
     presenter: Presenter,
     repo:Repository,
     parser: Parser,
-    driveHandler: DriveHandler,
 ) {
 
-    private def listSegments(pageMax: Int= 10, pageSize: Int = 20, isFileOnly: Boolean, isDirOnly: Boolean, name: String): Unit = {
-        val (files, token) = repo.FindSegments(driveHandler, pageMax, pageSize, isFileOnly, isDirOnly, name);
+    private def listSegments(
+       input: domain.LSInput,
+    ): Unit = {
+        val (files, token) = repo.FindSegments(input);
         for(file <- files) {
             println(presenter.PrettyPrintFile(file))
         }
@@ -27,8 +28,8 @@ class DnameHandler(
 
     private def execCommand(command: Command): Unit =
         command match
-            case Command.ListSegments(pageMax, pageNum, isFileOnly, isDirOnly, name) => {
-                listSegments(pageNum, pageMax, isFileOnly, isDirOnly, name)
+            case Command.ListSegments(input) => {
+                listSegments(input)
                 Exec()
             }
             case Command.Quit() => println("Bye!")

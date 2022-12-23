@@ -1,5 +1,6 @@
-package usecase
+package repository
 
+import usecase as U
 
 /**
  * Google Drive Api Handler 
@@ -19,6 +20,7 @@ trait DriveHandler {
       nextPageToken:String,
       isFileOnly: Boolean,
       isFolderOnly: Boolean,
-      name: String
-    ): (Seq[File], String)
+      name: String,
+      parentId: Option[String]
+    ): (Seq[U.File], String)
 }

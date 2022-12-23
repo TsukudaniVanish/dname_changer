@@ -24,9 +24,10 @@ object ServiceProvider {
        val driveHandler = infrastructure.DriveHandler(APPLICATION_NAME, TOKENS_DIRECTORY_PATH, SCOPES, CREDENTIALS_FILE_PATH, JSON_FACTORY)
        val dnameHandler = usecase.DnameHandler(
             presenter.Presenter(),
-            repository.Repository(),
+            repository.Repository(
+                driveHandler,
+            ),
             parser,
-            driveHandler,
        )
        dnameHandler.Exec()
     }

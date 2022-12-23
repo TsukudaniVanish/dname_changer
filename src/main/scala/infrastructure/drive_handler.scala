@@ -1,6 +1,6 @@
 package infrastructure
 
-import usecase as U 
+import repository as R 
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -30,7 +30,7 @@ class DriveHandler(
     scopes: Seq[String],
     credentialPath: String,
     jsonFactory: JsonFactory,
-) extends U.DriveHandler {
+) extends R.DriveHandler {
 
     private final def httpTransport = GoogleNetHttpTransport.newTrustedTransport();
     private final def service = Drive.Builder(httpTransport, jsonFactory, getCredentials(httpTransport)).setApplicationName(applicationName).build();
@@ -72,11 +72,15 @@ class DriveHandler(
         isFileOnly: Boolean,
         isFolderOnly: Boolean,
         name: String,
+        parentId: Option[String],
     ): (Seq[File], String) = {
         val query: String = setQueryBuilderIsFolderOnly(
             setQueryBuilderIsFileOnly(
                 setQueryBuilderName(
-                    QueryBuilder(List()),
+                    setQueryBuilderID(
+                        QueryBuilder(List()), 
+                        parentId,
+                    ),
                     name,
                 ), 
                 isFileOnly,
@@ -112,8 +116,11 @@ class DriveHandler(
 
     private def setQueryBuilderID(
         builder: QueryBuilder,
-        id: String
-    ): QueryBuilder = if id.isBlank() then builder else builder.ParentsIn(id)
+        id: Option[String]
+    ): QueryBuilder = id match
+        case None => builder
+        case Some(value) => builder.ParentsIn(value)
+    
 
     private class QueryBuilder(queries: Seq[String] = List()) {
 

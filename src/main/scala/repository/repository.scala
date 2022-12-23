@@ -2,36 +2,29 @@ package repository
 
 import usecase as U 
 
-class Repository extends U.Repository {
+class Repository(
+    driveHandler: DriveHandler,
+) extends U.Repository {
     def FindSegments(
-        driveHandler: U.DriveHandler, 
-        pageMax:Int,
-        pageSize: Int,
-        isFileOnly: Boolean,
-        isDirOnly: Boolean,
-        name: String,
+        input: domain.LSInput,
     ): (Seq[U.File], String) = {
-        consumeToken(driveHandler, pageSize, pageMax,List[U.File](), "", 0, isFileOnly, isDirOnly, name)        
+        consumeToken(driveHandler, input, "", 0, List[U.File]())        
     }
 
     private def consumeToken(
-        driveHandler: U.DriveHandler, 
-        pageSize: Int,
-        pageMax: Int ,
-        files:Seq[U.File], 
-        nextPageToken:String, 
-        pageNum: Int,
-        isFileOnly: Boolean,
-        isDirOnly: Boolean,
-        name: String,
+        driveHandler: DriveHandler, 
+       input: domain.LSInput,
+       nextPageToken: String,
+       pageNum: Int,
+       segments: Seq[U.File]
     ): (Seq[U.File], String) =
-        if pageNum >= pageMax then {
-            return (files, nextPageToken)
+        if  pageNum >= input.PageNum then {
+            return (segments, nextPageToken)
         } else {
-            val (fs,token)  = driveHandler.FindFiles(pageSize, nextPageToken, isFileOnly, isDirOnly, name);
+            val (fs,token)  = driveHandler.FindFiles(input.PageSize, nextPageToken, input.IsFileOnly, input.IsDirOnly, input.Name, input.OptParentId);
             if token.isEmpty() then 
-                (files ++ fs, "")
+                return (segments ++ fs, "")
             else 
-                consumeToken(driveHandler, pageSize, pageMax,files ++ fs, token, pageNum + 1, isFileOnly, isDirOnly, name)
+                consumeToken(driveHandler, input, token, pageNum + 1, segments ++ fs)
         }
 }
