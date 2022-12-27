@@ -74,64 +74,50 @@ class DriveHandler(
         name: String,
         parentId: Option[String],
     ): (Seq[File], String) = {
-        val query: String = setQueryBuilderIsFolderOnly(
-            setQueryBuilderIsFileOnly(
-                setQueryBuilderName(
-                    setQueryBuilderID(
-                        QueryBuilder(List()), 
-                        parentId,
-                    ),
-                    name,
-                ), 
-                isFileOnly,
-            ),
-            isFolderOnly,
-        ).Build();
-        val result = service.files().list()
-            .setQ(query)
+        val query: String = QueryBuilder(List())
+            .IsFileOnly(isFileOnly)
+            .IsFolderOnly(isFolderOnly)
+            .NameContains(name)
+            .IDInParents(parentId)
+            .Build();
+        val serviceRequest = service.files().list()
             .setPageToken(nextPageToken)
             .setPageSize(pageSize)
             .setFields("nextPageToken, files(id, name)")
-            .execute();
+        val result = if query.isBlank() then serviceRequest.execute() else serviceRequest.setQ(query).execute()
         val pageToken = result.getNextPageToken() match
             case null => ""
             case s => s 
         (result.getFiles().asScala.toList.map(f => File(f)), pageToken)
     }
-
-    private def setQueryBuilderIsFileOnly(
-        builder: QueryBuilder,
-        isFileOnly: Boolean,
-    ): QueryBuilder = if isFileOnly then builder.MimeTypeNot(folderMimeType) else builder
-
-    private def setQueryBuilderIsFolderOnly(
-        builder: QueryBuilder,
-        isFolderOnly: Boolean,
-    ): QueryBuilder = if isFolderOnly then builder.MimeType(folderMimeType) else builder 
-
-    private def setQueryBuilderName(
-        builder: QueryBuilder,
-        name: String
-    ): QueryBuilder = if name.isBlank() then builder else builder.NameContains(name)
-
-    private def setQueryBuilderID(
-        builder: QueryBuilder,
-        id: Option[String]
-    ): QueryBuilder = id match
-        case None => builder
-        case Some(value) => builder.ParentsIn(value)
     
 
     private class QueryBuilder(queries: Seq[String] = List()) {
 
-        def MimeType(mime: String): QueryBuilder = QueryBuilder( queries :+ s"mimeType ='${mime}'")
+        private def mimeType(mime: String): QueryBuilder = QueryBuilder( queries :+ s"mimeType ='${mime}'")
 
-        def MimeTypeNot(mime: String): QueryBuilder = QueryBuilder(queries :+ s"mimeType != '${mime}'")
+        private def mimeTypeNot(mime: String): QueryBuilder = QueryBuilder(queries :+ s"mimeType != '${mime}'")
 
-        def NameContains(name: String): QueryBuilder = QueryBuilder(queries :+ s"name contains '${name}'")
+        private def nameContains(name: String): QueryBuilder = QueryBuilder(queries :+ s"name contains '${name}'")
 
-        def ParentsIn(id:String): QueryBuilder = QueryBuilder(queries :+ s"'${id}' in parents")
+        private def parentsIn(id:String): QueryBuilder = QueryBuilder(queries :+ s"'${id}' in parents")
 
-        def Build(): String = queries.fold("")((s, t) => if s.isBlank then  t else s + " and " + t) + " and trashed = false"
+        def IsFileOnly(isFileOnly: Boolean) = if isFileOnly then mimeTypeNot(folderMimeType) else QueryBuilder(queries)
+        
+        def IsFolderOnly(isFolderOnly: Boolean) = if isFolderOnly then mimeType(folderMimeType) else QueryBuilder(queries) 
+    
+        def NameContains(name: String) = if name.isBlank() then QueryBuilder(queries) else nameContains(name)
+
+        def IDInParents(optId: Option[String]) = optId match
+            case None => QueryBuilder(queries) 
+            case Some(value) => parentsIn(value)
+
+        def Build(): String = {
+            val input = queries.fold("")((s, t) => if s.isBlank then  t else s + " and " + t);
+            if input.isBlank() then 
+                "trashed = false"
+            else 
+                input + " and trashed = false"
+        }
     }
 } 
