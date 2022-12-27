@@ -14,11 +14,9 @@ class DnameHandler(
 
     private def listSegments(
        input: domain.LSInput,
-    ): Unit = {
+    ): Seq[File] = {
         val (files, token) = repo.FindSegments(input);
-        for(file <- files) {
-            println(presenter.PrettyPrintFile(file))
-        }
+        files
     }
 
     def Exec(): Unit = {
@@ -26,14 +24,18 @@ class DnameHandler(
         execCommand(command)
     }
 
-    private def execCommand(command: Command): Unit =
-        command match
-            case Command.ListSegments(input) => {
-                listSegments(input)
-                Exec()
-            }
-            case Command.Quit() => println("Bye!")
-            case Command.Error() => Exec()
+    private def execCommand(command: Command): Unit = {
+        val files = command match {
+            case Command.ListSegments(input) => listSegments(input)
+            case Command.Quit() => return println("Bye!")
+            case Command.Error() => return Exec()
+        }
+        for(file <- files) {
+            println(presenter.PrettyPrintFile(file))
+        }
+        Exec()
+    }
+        
         
 
     
