@@ -90,6 +90,16 @@ class DriveHandler(
             case s => s 
         (result.getFiles().asScala.toList.map(f => File(f)), pageToken)
     }
+
+    def UpdateFile(
+        id: String,
+        newName: String,
+    ): File = {
+        val newFile = com.google.api.services.drive.model.File().setName(newName);
+        val serviceRequest = service.files().update(id, newFile);
+        val result = serviceRequest.execute();
+        File(result)
+    }
     
 
     private class QueryBuilder(queries: Seq[String] = List()) {

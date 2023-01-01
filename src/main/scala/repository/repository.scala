@@ -11,6 +11,17 @@ class Repository(
         consumeToken(driveHandler, input, "", 0, List[U.File]())        
     }
 
+    def UpdateFile(in: domain.UpdateFileInput): Either[String, U.File] = {
+        val file = 
+            try {
+                driveHandler.UpdateFile(in.fileID, in.name)
+            }
+            catch {
+                case e:Exception => return Left(e.getMessage())
+            }
+        Right(file) 
+    }    
+
     private def consumeToken(
         driveHandler: DriveHandler, 
        input: domain.LSInput,

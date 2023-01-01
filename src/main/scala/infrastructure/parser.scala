@@ -1,5 +1,7 @@
 package infrastructure
 
+
+import scala.io.StdIn
 import scopt.OParser
 import java.io.ObjectInputFilter.Config
 
@@ -61,6 +63,29 @@ class Parser(
                     )
 
                 ),
+            cmd("rename")
+                .action((s, c) => RenameFile(domain.UpdateFileInput()))
+                .text("update filename of given id")
+                .children(
+                    opt[String]("new-name")
+                        .abbr("n")
+                        .action((s, c) => c match
+                            case RenameFile(input) => RenameFile(domain.UpdateFileInput(s, input.fileID))  
+                            case _ => c)
+                    .text("new file name"),
+                    opt[String]("file-id")
+                        .abbr("id")
+                        .action((s,c ) => c match
+                            case RenameFile(input) => RenameFile(domain.UpdateFileInput(input.name, s))
+                            case _ => c 
+                        )
+                        .text("file id of target file"),
+                    checkConfig(c => c match
+                        case RenameFile(input) => if input.name.isBlank() then failure("file name must be specified") else 
+                            if input.fileID.isBlank() then failure("file id must be specified") else success
+                        case _ => success
+                    )
+                ),
             cmd("quit")
                 .action((_, c) => Quit())
                 .text("quit this app"),
@@ -72,4 +97,6 @@ class Parser(
         case Some(c) => c   
         case None => Command.Error()
     }
+
+    def getArg(): Seq[String] = StdIn.readLine("dname > ").split(" ").toSeq
 }

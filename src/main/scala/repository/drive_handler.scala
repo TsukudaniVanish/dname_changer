@@ -23,4 +23,9 @@ trait DriveHandler {
       name: String,
       parentId: Option[String]
     ): (Seq[U.File], String)
+
+    def UpdateFile(
+      fileID: String,
+      newName: String,
+    ): U.File
 }

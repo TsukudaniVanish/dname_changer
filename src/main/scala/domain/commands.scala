@@ -17,10 +17,19 @@ class LSInput(
     val OptParentId: Option[String] = parentId
 }
 
+class UpdateFileInput(
+    Name: String = "",
+    FileID: String = "",
+) {
+    val name = Name
+    val fileID = FileID
+}
+
 enum Command {
     case ListSegments(
         lsInput: LSInput,
     )
+    case RenameFile(updateFileInput: UpdateFileInput)
     case Quit()
     case Error()
 }
