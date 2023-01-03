@@ -38,6 +38,7 @@ enum Command {
     )
     case RenameFile(updateFileInput: UpdateFileInput)
     case CutCopyOf(cutCopyOf: CutCopyOfInput)
+    case Help()
     case Quit()
     case Error()
 }

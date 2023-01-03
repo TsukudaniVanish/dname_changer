@@ -104,7 +104,11 @@ class Parser(
                     case _ => success
                   )
                 ),
+            cmd("help")
+              .action((_, c) => Help())
+              .text("show useage text"),
             cmd("quit")
+                .abbr("q")
                 .action((_, c) => Quit())
                 .text("quit this app"),
         )
@@ -115,6 +119,8 @@ class Parser(
         case Some(c) => c   
         case None => Command.Error()
     }
+
+    def getUseage(): String = OParser.usage(parser1)
 
     def getArg(): Seq[String] = StdIn.readLine("dname > ").split(" ").toSeq
 }

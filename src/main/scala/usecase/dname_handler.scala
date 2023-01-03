@@ -9,6 +9,7 @@ import domain.Command
 import domain.CutCopyOfInput
 import scala.util.matching.Regex
 import scala.compiletime.ops.string
+import domain.Command
 
 class DnameHandler(
     presenter: Presenter,
@@ -53,6 +54,11 @@ class DnameHandler(
         )
     }
 
+    private def showUseage(): Seq[File] = {
+      presenter.Show(parser.getUseage());
+      List()
+    }
+
     // check file name has ".* のコピー" 
     private def hasCopyOfName(file: File): Boolean = {
       val targetReg: Regex = "^(.*) のコピー$".r;
@@ -81,6 +87,7 @@ class DnameHandler(
             case Command.ListSegments(input) => listSegments(input)
             case Command.RenameFile(updateFileInput) => updateFiles(List(updateFileInput))
             case Command.CutCopyOf(cutCopyOfInput) => cutCopyOf(cutCopyOfInput)
+            case Command.Help() => showUseage()
             case Command.Quit() => return presenter.Show("Bye!")
             case Command.Error() => return Exec()
         }

@@ -1,8 +1,14 @@
-## sbt project compiled with Scala 3
+# Dname-changer 
+
+### Requirements 
+
+
+- openjdk 17 or upper
+- google drive api auth
+    -- ref: https://developers.google.com/drive/api/quickstart/java
 
 ### Usage
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+- `sbt run` and `help` will show useage text
 
-For more information on the sbt-dotty plugin, see the
-[scala3-example-project](https://github.com/scala/scala3-example-project/blob/main/README.md).
+
