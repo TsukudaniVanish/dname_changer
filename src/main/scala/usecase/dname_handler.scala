@@ -1,11 +1,14 @@
 package usecase
 
-import scala.io.StdIn
 
 import domain.Command
 import domain.Command
 import domain.Command
 import domain.Command
+import domain.Command
+import domain.CutCopyOfInput
+import scala.util.matching.Regex
+import scala.compiletime.ops.string
 
 class DnameHandler(
     presenter: Presenter,
@@ -34,6 +37,40 @@ class DnameHandler(
             case Right(files) => files
     }
 
+    private def cutCopyOf(
+      input: CutCopyOfInput
+    ): Seq[File] = {
+      val (targetFiles, _) = repo.FindSegments(domain.LSInput(pageMax = 18, pageSize = 20, isFileOnly = true, isDirOnly = false, parentId = Some(input.parentID)));
+      updateFiles(
+        targetFiles
+          .filter(hasCopyOfName)
+          .map(
+            file => domain.UpdateFileInput(
+              cutoutCopyOf(file.getName()),
+              file.getID()
+            )
+          )
+        )
+    }
+
+    // check file name has ".* のコピー" 
+    private def hasCopyOfName(file: File): Boolean = {
+      val targetReg: Regex = "^(.*) のコピー$".r;
+      targetReg.findFirstMatchIn(file.getName()) match
+        case None => false 
+        case Some(value) => true
+    }
+
+    def cutoutCopyOf(name: String): String = {
+      val targetReg =  "^(.*) のコピー$".r;
+      targetReg.findFirstMatchIn(name) match
+        case None => name 
+        case Some(value) => {
+          name.slice(from = 0, until = name.length() - " のコピー".length())
+        }
+    }
+                    
+
     def Exec(): Unit = {
         val command = parser.ParseArg(parser.getArg())
         execCommand(command)
@@ -43,6 +80,7 @@ class DnameHandler(
         val files = command match {
             case Command.ListSegments(input) => listSegments(input)
             case Command.RenameFile(updateFileInput) => updateFiles(List(updateFileInput))
+            case Command.CutCopyOf(cutCopyOfInput) => cutCopyOf(cutCopyOfInput)
             case Command.Quit() => return presenter.Show("Bye!")
             case Command.Error() => return Exec()
         }

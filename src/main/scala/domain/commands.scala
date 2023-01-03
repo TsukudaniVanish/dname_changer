@@ -25,11 +25,19 @@ class UpdateFileInput(
     val fileID = FileID
 }
 
+
+class CutCopyOfInput(
+  ParentID: String = "",
+) {
+  val parentID = ParentID 
+}
+
 enum Command {
     case ListSegments(
         lsInput: LSInput,
     )
     case RenameFile(updateFileInput: UpdateFileInput)
+    case CutCopyOf(cutCopyOf: CutCopyOfInput)
     case Quit()
     case Error()
 }

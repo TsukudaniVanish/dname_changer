@@ -27,4 +27,18 @@ class MySuite extends munit.FunSuite {
       List("Name: ok    (ID:1)", "Bye!")
     )
   }
+
+  test("cutoutCopyOf") {
+    val parserMock = ParserMock(List("rename"))
+    val presenterMock = PresenterMock()
+    val handler = usecase.DnameHandler(presenterMock, repoMock, parserMock)
+    val testItems = List("aaabs", "にほんご.py")
+    for(item <- testItems) {
+      val copyOf = item ++ " のコピー"
+      assertEquals(
+        handler.cutoutCopyOf(copyOf),
+        item
+      )
+    }
+  }
 }

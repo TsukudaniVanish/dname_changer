@@ -7,6 +7,8 @@ import java.io.ObjectInputFilter.Config
 
 import domain.Command
 import domain.Command
+import domain.Command
+import domain.Command
 class Parser(
     applicationName: String
 ) extends usecase.Parser {
@@ -74,7 +76,7 @@ class Parser(
                             case _ => c)
                     .text("new file name"),
                     opt[String]("file-id")
-                        .abbr("id")
+                        .abbr("f-id")
                         .action((s,c ) => c match
                             case RenameFile(input) => RenameFile(domain.UpdateFileInput(input.name, s))
                             case _ => c 
@@ -85,6 +87,22 @@ class Parser(
                             if input.fileID.isBlank() then failure("file id must be specified") else success
                         case _ => success
                     )
+                ),
+            cmd("cut-copy-of")
+              .abbr("ccf")
+              .action((_, c) => CutCopyOf(domain.CutCopyOfInput()))
+              .text("cut 'のコピー' from contents of specified folder by id")
+              .children(
+                  opt[String]("parent-id")
+                    .abbr("p-id")
+                    .action((s, c) => c match
+                      case Command.CutCopyOf(cutCopyOf) => CutCopyOf(domain.CutCopyOfInput(s))
+                      case _ => c) 
+                    .text("parent id taht specifies folder"),
+                  checkConfig(c => c match
+                    case CutCopyOf(cutCopyOf) => if cutCopyOf.parentID.isBlank() then failure("parent-id must be specified") else success
+                    case _ => success
+                  )
                 ),
             cmd("quit")
                 .action((_, c) => Quit())
