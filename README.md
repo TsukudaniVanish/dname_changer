@@ -30,7 +30,7 @@ update filename of given id
 Command: cut-copy-of [options]
 cut 'のコピー' from contents of specified folder by id
   -p-id, --parent-id <value>
-                           parent id taht specifies folder
+                           parent id that specifies folder
 Command: help
 show useage text
 Command: quit
